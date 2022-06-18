@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools" >
+
+    <TextView
+        android:id="@+id/question_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:padding="24dp"
+        tools:text="@string/question_australia" />
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|center_horizontal"
+        style="@style/TextAppearance.AppCompat.Button">
+
+        <Button
+            android:id="@+id/true_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/true_button"
+            style="@style/TextAppearance.AppCompat.Button"/>
+
+        <Button
+            android:id="@+id/false_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/false_button"
+            style="@style/TextAppearance.AppCompat.Button"/>
+    </LinearLayout>
+
+
+    <Button
+        android:id="@+id/prev_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:drawableStart="@drawable/arrow_left"
+        android:drawablePadding="4dp"
+        android:text="@string/prev_button" />
+
+    <Button
+        android:id="@+id/cheat_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:text="@string/cheat_button" />
+
+    <ImageButton
+            android:id="@+id/next_button"
+            android:layout_width="48dp"
+            android:layout_height="32dp"
+            android:layout_gravity="bottom|end"
+            android:src="@drawable/arrow_right"
+            android:contentDescription="@string/next_button"
+            android:background="@color/black"/>
+
+
+    <TextView
+        android:id="@+id/api_level"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:padding="24dp"
+        android:text="@string/api_level"
+        android:clickable="true"
+        android:focusable="true" />
+
+
+</FrameLayout>
