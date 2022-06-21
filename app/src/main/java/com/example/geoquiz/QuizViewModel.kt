@@ -5,19 +5,19 @@ import androidx.lifecycle.ViewModel
 //private const val TAG = "QuizViewModel"
 class QuizViewModel : ViewModel() {
 
-    var questionBank = listOf(
-        Question(R.string.question_australia, true, 0),
-        Question(R.string.question_oceans, true, 0),
-        Question(R.string.question_mideast, false, 0),
-        Question(R.string.question_africa, false, 0),
-        Question(R.string.question_americas, true, 0),
-        Question(R.string.question_asia, true, 0))
+    val questionBank = listOf(
+        Question(R.string.question_australia, true),
+        Question(R.string.question_oceans, true),
+        Question(R.string.question_mideast, false),
+        Question(R.string.question_africa, false),
+        Question(R.string.question_americas, true),
+        Question(R.string.question_asia, true))
 
     var currentIndex = 0    //变量
 
     //新属性来保存CheatActivity传回的值。用户是否作弊属于UI状态数据。
     //UI状态数据保存在ViewModel里不会像activity那样因设备配置改变被销毁而丢失数据
-    var isCheater = false   //记录是否作弊
+    var isCheater = 0  //记录是否作弊
 
         //MainActivity会调用添加到QuizViewModel里的函数和计算属性，而不是直接访问questionBank。另外，init和
         //onCleared()日志记录代码没用了，顺手删除它们。接着，在QuizViewModel里，添加地理知识问题出题函数，以及返
@@ -26,7 +26,7 @@ class QuizViewModel : ViewModel() {
         get() = questionBank[currentIndex].answer   //函数获取调用对错答案，不直接访问数据
     val currentQuestionText: Int        //当前问题
         get() = questionBank[currentIndex].textResId    //函数获取调用题目的资源ID，不直接访问数据
-    val currentQuestionAnswerd: Int   //当前问题是否作答
+    val currentQuestionAnswered: Int   //当前问题是否作答
         get() = questionBank[currentIndex].answerd
 
     fun before() {

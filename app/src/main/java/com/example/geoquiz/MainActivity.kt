@@ -249,7 +249,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
     //创建ButtonEnabled函数，将答过的题目禁止答
     private fun buttonEnabled(){
-        if (quizViewModel.currentQuestionAnswerd != 0){
+        if (quizViewModel.currentQuestionAnswered != 0){
             trueButton.isEnabled = false
             falseButton.isEnabled = false
         } else {
