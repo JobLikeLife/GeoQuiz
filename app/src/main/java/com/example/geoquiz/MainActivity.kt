@@ -2,7 +2,6 @@ package com.example.geoquiz
 
 import android.app.Activity
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
@@ -11,14 +10,17 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 
 private const val TAG = "MainActivity"
 private const val KEY_INDEX = "index"   //键值，用来保留实例状态.用于后面从bundle中取值
+private const val KEY_CHEATE_NUMS = "cheatNumbs"
 //private const val REQUEST_CODE_CHEAT = 0    //请求代码常量
 private const val KEY_ANSWER = "KEY_ANSWER"     //键值，值放到onSaveInstanceState方法里面用Bundle对象保存起来
-private const val EXTRA_CHEATE_NUMS = "com.example.geoquiz.cheat_nums"  //用于传递
-private var Cheat_Nums = 3    //限制作弊3次
+private const val KEY_CHEATED = "KEY_CHEATED"
+//private const val EXTRA_CHEATE_NUMS = "com.example.geoquiz.cheat_nums"  //用于传递
+//private const val Cheat_Nums = 3    //默认限制作弊3次
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,7 +32,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cheatButton: Button    //作弊按钮变量
     private lateinit var questionTextView: TextView
     private lateinit var apiLevel: TextView
-    private lateinit var cheatNums: TextView
+    private lateinit var cheatNum: TextView
+    private var correctAnswered: Double = 0.0   //3.9评分，累计正确答案个数
+    private var answerLength: Double = 0.0      //回答问题个数
+
     //添加一个惰性初始化属性来保存与MainActivity关联的QuizViewModel实例
     //只在activity实例对象被创建后，才需要获取和保存QuizViewModel，也就是说，quizViewModel一次只应该赋一个值。
     private val quizViewModel: QuizViewModel by lazy {
@@ -41,9 +46,17 @@ class MainActivity : AppCompatActivity() {
         if (result.resultCode == Activity.RESULT_OK) {
             //   ?.  当对象为空什么都不做
             //   ?:  左边表达式不为空返回左边结果，否则返回右边
-                //返回的数据显示，没有作弊false；返回ture，取出作弊值true
-            quizViewModel.isCheater = result.data?.getBooleanExtra(EXTRA_ANSWER_SHOWN, false) ?: false
-            Cheat_Nums = result.data?.getIntExtra(EXTRA_CHEATE_NUMS,0)!!
+                //返回的数据显示，没有作弊false；返回ture，取出作弊F值true
+
+           val ceshi= result.data?.getBooleanExtra(EXTRA_ANSWER_SHOWN, false) ?: false
+            quizViewModel.currentQuestioncheated= ceshi
+            val shuzi= result.data?.getIntExtra(EXTRA_CHEATE_NUMS, 0)?:0
+            quizViewModel.cheatNumbs =shuzi
+            Log.d(TAG, "测试+$ceshi")
+            Log.d(TAG, "嗯+${quizViewModel.currentQuestioncheated}")
+            Log.d(TAG, "shuzi+$shuzi")
+            Log.d(TAG, "哦+${quizViewModel.cheatNumbs}")
+            cheatNum.text = "Remaining number of cheating:"+quizViewModel.cheatNumbs.toString()
         }
 /*
 if (result.resultCode == RESULT_OK) {
@@ -63,13 +76,21 @@ if (result.resultCode == RESULT_OK) {
         //最后，在onCreate(Bundle?)函数中确认是否成功获取该数值。如 果获取成功，就将它赋值给变量currentIndex；
         // 如果bundle里不存 在index键对应的值，或者Bundle对象是null，就将currentIndex的值设为0，
         val currentIndex = savedInstanceState?.getInt(KEY_INDEX, 0) ?: 0
+        val cheatNums = savedInstanceState?.getInt(KEY_CHEATE_NUMS)
         quizViewModel.currentIndex = currentIndex
+        if (cheatNums != null) {
+            quizViewModel.cheatNumbs = cheatNums
+        }
 
         if (savedInstanceState != null) {
             //mCurrentIndex = savedInstanceState.getInt(KEY_INDEX, 0)
             val answerList: IntArray? = savedInstanceState.getIntArray(KEY_ANSWER)
             for (i in quizViewModel.questionBank.indices) {
                 quizViewModel.questionBank[i].answerd = answerList!![i] //将答题情况存储在question中
+            }
+            val cheatedList: BooleanArray? = savedInstanceState.getBooleanArray(KEY_CHEATED)
+            for (i in quizViewModel.questionBank.indices) {
+                quizViewModel.questionBank[i].isCheated = cheatedList!![i] //将答题情况存储在question中
             }
         }
 
@@ -92,8 +113,8 @@ if (result.resultCode == RESULT_OK) {
         nextButton = findViewById(R.id.next_button)
         questionTextView = findViewById(R.id.question_text_view)
         apiLevel = findViewById(R.id.api_level)
-        cheatNums = findViewById(R.id.cheat_nums)
-
+        cheatNum = findViewById(R.id.cheat_nums)
+        //cheatNum.text = "Remaining number of cheating:"+quizViewModel.cheatNumbs.toString()
         var x = 0
         apiLevel.setOnClickListener {
             x++
@@ -133,6 +154,7 @@ if (result.resultCode == RESULT_OK) {
 
         cheatButton.setOnClickListener {
 
+
             //监听器代码中，创建包含CheatActivity类的Intent实例，然后将其传入startActivity(Intent)函数
             //传入Intent构造函数的Class类型参数告诉ActivityManager应 该启动哪个activity。
             // Context参数告诉ActivityManager在哪里可以找到它
@@ -142,9 +164,15 @@ if (result.resultCode == RESULT_OK) {
 
             //用extra启动CheatActivity
             val answerIsTrue = quizViewModel.currentQuestionAnswer  //调用ViewModel类函数中的当前问题答案
+
+            //val cheatedNum = quizViewModel.cheatNumbs
+            //if (quizViewModel.cheatNumbs in 1..3) { cheatButton.isEnabled = false }
+
             //传递答案给CheatActivity
-            val intent = CheatActivity.newIntent(this@MainActivity, answerIsTrue)
-            intent.putExtra(EXTRA_CHEATE_NUMS, Cheat_Nums)
+            val intent = CheatActivity.newIntent(this@MainActivity, answerIsTrue, quizViewModel.cheatNumbs)
+            //intent.putExtra(EXTRA_CHEATE_NUMS, Cheat_Nums)
+
+
 
 /*代码清单7-1　添加动画特效代码（MainActivity.kt）
 使用ActivityOptions类来定制该如何启动activity。调用makeClipRevealAnimation(...)可以让
@@ -172,6 +200,7 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
  }
 */
             requestDataLauncher.launch(intent)
+            updateQuestion()
 
             //startActivityForResult(intent, REQUEST_CODE_CHEAT)
         }
@@ -181,12 +210,11 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //currentIndex = (currentIndex + 1) % questionBank.size
             quizViewModel.moveToNext()  //P147,注释上一行.更新题干，移动到下一题号
             updateQuestion()
-            answerLength++
-
+            if(quizViewModel.currentQuestionAnswered != 0){ answerLength++ }
             if (answerLength == quizViewModel.questionBank.size.toDouble()){
                 val i =correctAnswered/quizViewModel.questionBank.size
                 val score="%.2f".format(i*100)
-                Toast.makeText(this, "score=$score.",Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "score=$score.",Toast.LENGTH_LONG).show()
             }
         }
 
@@ -209,15 +237,14 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
     override fun onStart() {
         super.onStart()
         Log.d(TAG, "onStart() called")
-        if (Cheat_Nums == 0) {
-            cheatButton.isEnabled = false
-        }
-    cheatNums.text = "Remaining number of cheating:$Cheat_Nums"
+        //if (quizViewModel.cheatNumbs == 0 ) { cheatButton.isEnabled = false }
+        //cheatNum.text = "Remaining number of cheating:"+quizViewModel.cheatNumbs.toString()
 
     }
     override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume() called")
+
     }
     override fun onPause() {
         super.onPause()
@@ -230,12 +257,17 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         super.onSaveInstanceState(savedInstanceState)
         Log.i(TAG, "onSaveInstanceState")
         savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)    //保存整型数据
+        savedInstanceState.putInt(KEY_CHEATE_NUMS,quizViewModel.cheatNumbs)
         val answeredList = IntArray(quizViewModel.questionBank.size)
         for (i in quizViewModel.questionBank.indices){
             answeredList[i] = quizViewModel.questionBank[i].answerd
         }
         savedInstanceState.putIntArray(KEY_ANSWER, answeredList) //保存作答状态
-
+        val cheatedList = BooleanArray(quizViewModel.questionBank.size)
+        for (i in quizViewModel.questionBank.indices){
+            cheatedList[i] = quizViewModel.questionBank[i].isCheated
+        }
+        savedInstanceState.putBooleanArray(KEY_CHEATED, cheatedList) //保存作弊状态
     }
 
     override fun onStop() {
@@ -247,14 +279,17 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         Log.d(TAG, "onDestroy() called")
     }
 
-    //创建ButtonEnabled函数，将答过的题目禁止答
+    //创建ButtonEnabled函数，将答过的题目按钮禁止
     private fun buttonEnabled(){
-        if (quizViewModel.currentQuestionAnswered != 0){
-            trueButton.isEnabled = false
-            falseButton.isEnabled = false
+        if ( quizViewModel.currentQuestionAnswered != 0){
+            trueButton.isEnabled = false//禁用
+            falseButton.isEnabled = false//禁用
+           // if(quizViewModel.currentQuestioncheated ||quizViewModel.cheatNumbs == 0 ){cheatButton.isEnabled = false}
         } else {
             trueButton.isEnabled = true
             falseButton.isEnabled = true
+            if(quizViewModel.cheatNumbs in 0..1){cheatButton.isEnabled = false}else if(quizViewModel.cheatNumbs in 2..3){cheatButton.isEnabled = true}
+            //if(quizViewModel.cheatNumbs in 2..3){cheatButton.isEnabled = true}else{cheatButton.isEnabled = false}
         }
 
     }
@@ -272,12 +307,12 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
     //同样，为避免代码重复，我们将解决方案封装在一个私有函数里。
     //该函数接受布尔类型的变量参数，判别用户点击了TRUE还是FALSE按钮。
     //然后，将用户的答案同当前Question对象中的答案做比较，判断正误，并生成一个toast消息反馈给用户。
-    private var correctAnswered : Double = 0.0
-    private var answerLength : Double = 0.0
     private fun checkAnswer(userAnswer: Boolean) {
         //val correctAnswer = questionBank[currentIndex].answer
         //P147,注释上一行.更新题干
         val correctAnswer: Boolean = quizViewModel.currentQuestionAnswer
+        val cheater: Boolean = quizViewModel.questionBank[quizViewModel.currentIndex].isCheated
+        Log.i(TAG, "$cheater")
         /*
         val messageResId = if (userAnswer == correctAnswer) {
             R.string.correct_toast
@@ -295,27 +330,33 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         }*/
 
         val messageResId: Int
-        if (quizViewModel.isCheater){
+        if (cheater){
             messageResId = R.string.judgment_toast
+            Toast.makeText(this, messageResId, Toast.LENGTH_LONG).show()
         } else if (userAnswer == correctAnswer){
-            quizViewModel.questionBank[quizViewModel.currentIndex].answerd = 1
+            quizViewModel.questionBank[quizViewModel.currentIndex].answerd = 1//答对1
             messageResId = R.string.correct_toast
             buttonEnabled()
             correctAnswered++
+            Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).apply {
+                setGravity(Gravity.TOP, 0, 0)
+            }.show()
         } else {
-            quizViewModel.questionBank[quizViewModel.currentIndex].answerd = -1
+            quizViewModel.questionBank[quizViewModel.currentIndex].answerd = -1//答错-1
             messageResId = R.string.incorrect_toast
             buttonEnabled()
+            Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).apply {
+                setGravity(Gravity.TOP, 0, 0)
+            }.show()
         }
         //静态函数。该函数会创建并配置Toast对象。
         //Toast类必须借助Context才能找到并使用字符串资源ID
         //1.11挑战练习，在顶部显示弹窗消息
-        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).apply {
-            setGravity(Gravity.TOP, 0, 0)
-        }.show()
-    }
 
+    }
 }
+
+
 
 /*
 运行GeoQuiz应用。点击CHEAT!按钮，然后在作弊界面点击SHOW

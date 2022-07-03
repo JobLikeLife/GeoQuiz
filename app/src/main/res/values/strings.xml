@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">GeoQuiz</string>
 
-    <string name="question_australia">1.Canberra is the capital of Australia.</string>
+    <string name="question_australia">1.Canberra is the capital of Australia.测试wifi调试</string>
     <string name="question_oceans">2.The Pacific Ocean is larger than the Atlantic Ocean.</string>
     <string name="question_mideast">3.The Suez Canal connects the Red Sea and the Indian Ocean.</string>
     <string name="question_africa">4.The source of the Nile River is in Egypt.</string>
